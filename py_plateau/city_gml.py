@@ -101,6 +101,7 @@ class CityGml:
                 "bldg:boundedBy/bldg:RoofSurface/bldg:lod2MultiSurface/gml:MultiSurface/gml:surfaceMember/gml:Polygon",
                 "bldg:boundedBy/bldg:WallSurface/bldg:lod2MultiSurface/gml:MultiSurface/gml:surfaceMember/gml:Polygon",
             ]
+            poly_ids = []
             vals_list = []
             for polygon_xpath in polygon_xpaths:
                 poslist_xpaths = building.xpath(polygon_xpath, namespaces=nsmap)
@@ -108,10 +109,11 @@ class CityGml:
                     vals = poslist_xpath.xpath(
                         "gml:exterior/gml:LinearRing/gml:posList", namespaces=nsmap
                     )
+                    poly_ids.append(poslist_xpath.attrib.values()[0])
                     vals_list.extend(vals)
 
             polygons = [str2floats(v).reshape((-1, 3)) for v in vals_list]
-            obj_building.create_triangle_meshes(polygons)
+            obj_building.create_triangle_meshes(poly_ids, polygons)
             self.obj_buildings.append(obj_building)
 
     def write_ply(self, output_path):
