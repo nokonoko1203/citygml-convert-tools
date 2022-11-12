@@ -13,8 +13,9 @@ from .earcut import earcut
 class Building:
     """bldg:Building"""
 
-    def __init__(self, from_srid="6697", to_srid="6677"):
+    def __init__(self, b_id, from_srid="6697", to_srid="6677"):
         # super().__init__()
+        self.cityobject_id = b_id
         self.polygons = []
 
         self.vertices = []

@@ -92,7 +92,8 @@ class CityGml:
             "/core:CityModel/core:cityObjectMember/bldg:Building", namespaces=nsmap
         )
         for building in buildings:
-            obj_building = Building(self.from_srid, self.to_srid)
+            b_id = building.attrib.values()[0]
+            obj_building = Building(b_id, self.from_srid, self.to_srid)
 
             # bldg:GroundSurface, bldg:RoofSurface, bldg:RoofSurface
             polygon_xpaths = [
