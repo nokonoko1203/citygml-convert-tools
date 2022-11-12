@@ -93,7 +93,7 @@ class CityGml:
         for building in buildings:
             obj_building = Building(self.from_srid, self.to_srid)
 
-            # bldg:GroundSurface, bldg:RoofSurface, bldg:RoofSurface
+            # bldg:GroundSurface, bldg:RoofSurface, bldg:WallSurface
             polygon_xpaths = [
                 "bldg:boundedBy/bldg:GroundSurface/bldg:lod2MultiSurface/gml:MultiSurface/gml:surfaceMember/gml:Polygon",
                 "bldg:boundedBy/bldg:RoofSurface/bldg:lod2MultiSurface/gml:MultiSurface/gml:surfaceMember/gml:Polygon",
