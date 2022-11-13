@@ -168,7 +168,7 @@ class CityGml:
 
                 textures.append(parameter)
 
-            obj_building.create_triangle_meshes(poly_ids, polygons)
+            obj_building.create_triangle_meshes(poly_ids, polygons, textures)
             self.obj_buildings.append(obj_building)
 
     def write_ply(self, output_path):

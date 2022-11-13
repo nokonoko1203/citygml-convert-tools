@@ -34,7 +34,7 @@ class Building:
         xx, yy, zz = self.transformer.transform(latitude, longitude, height)
         return np.array([xx, yy, zz])
 
-    def create_triangle_meshes(self, poly_ids, polygons):
+    def create_triangle_meshes(self, poly_ids, polygons, textures):
         for poly_id, poly in zip(poly_ids, polygons):
             transformed_polygon = [self.transform_coordinate(*x) for x in poly]
             # CityGMLと法線計算時の頂点の取扱順序が異なるため、反転させる
