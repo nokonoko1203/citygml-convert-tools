@@ -61,6 +61,14 @@ class Building:
                 triangles_offset = triangles + vertices_start_index
                 self.triangles.extend(triangles_offset)
 
+                # テクスチャを追加
+                # 一次元に変換
+                t_array = triangles.reshape((-1))
+
+                import pdb
+
+                pdb.set_trace()
+
         # create triangle mesh by Open3D
         triangle_meshes = o3d.geometry.TriangleMesh()
         triangle_meshes.vertices = o3d.utility.Vector3dVector(self.vertices)

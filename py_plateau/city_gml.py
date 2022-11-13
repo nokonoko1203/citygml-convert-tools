@@ -124,7 +124,8 @@ class CityGml:
             for appearance in appearance_member:
                 parameter = {
                     "image_uri": None,
-                    "targets": {},
+                    "poly_id": None,
+                    "uv_coord": None,
                 }
 
                 # 画像のURIを取得
@@ -153,7 +154,6 @@ class CityGml:
 
                     # 要素の数が最大値よりも多い時？に要素を追加する
                     for coordinate_index, coord in enumerate(texture_coordinates):
-                        last = coord[-1].reshape(-1, 2)
                         num = maximum_of_elements - coord.shape[0]
 
                         if num > 0:
@@ -164,9 +164,10 @@ class CityGml:
                             )
 
                     # テクスチャの座標とURIのペアを格納
-                    parameter["targets"][uri] = np.array(texture_coordinates)
+                    parameter["poly_id"] = uri
+                    parameter["uv_coord"] = np.array(texture_coordinates)
 
-                textures.append(parameter)
+                    textures.append(parameter)
 
             obj_building.create_triangle_meshes(poly_ids, polygons, textures)
             self.obj_buildings.append(obj_building)
