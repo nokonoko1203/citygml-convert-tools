@@ -38,6 +38,10 @@ class Building:
         return np.array([xx, yy, zz])
 
     def create_triangle_meshes(self, poly_ids, polygons, textures, filename):
+        # 複数のポリゴン全てのポリゴンのUV座標を保持する
+        all_mesh_uvs = []
+
+        # 面ごとに処理を行う
         for poly_id, poly in zip(poly_ids, polygons):
             # polygonのidだけ、リンクではなくリンク元なので、#がついてないので、#をつける
             poly_id = "#" + poly_id
@@ -68,50 +72,53 @@ class Building:
                 self.triangles.extend(triangles_offset)
 
                 # テクスチャを探す
-                # LOD2じゃない場合は無視される
-                # todo:要高速化
-                texture = None
-                for texture_coords in textures:
-                    # image_uri = texture_coords["image_uri"]
-                    targets = texture_coords["targets"]
-
-                    uv_coords = targets.get(poly_id)
+                # LOD2じゃない場合はテクスチャがないので無視される
+                for t in textures:
+                    # ポリゴンのidと一致するidを持つUV座標を取得する
+                    uv_coords = t["targets"].get(poly_id)
+                    # テクスチャがある場合は、UV座標を保持する
+                    # ただし、UV座標はは三角化される前の多角形の頂点に合っている
                     if uv_coords is not None:
-                        texture = texture_coords
-                        break
+                        image_uri = t["image_uri"]
 
-                mesh_uvs = []
-                if texture is not None:
-                    t = texture["targets"][poly_id]
-                    t_array = triangles.reshape((-1))
-                    for x in t_array:
-                        uv = t[0, x]
-                        mesh_uvs.append(uv)
+                        t_array = triangles.reshape((-1))
+                        one_mesh_uvs = []
+                        for x in t_array:
+                            uv = uv_coords[0, x]
+                            one_mesh_uvs.append(uv)
+                        all_mesh_uvs.append(one_mesh_uvs)
+                        # IDはユニークのはずなので、見つけたら終了
+                        break
 
         # create triangle mesh by Open3D
         triangle_meshes = o3d.geometry.TriangleMesh()
         triangle_meshes.vertices = o3d.utility.Vector3dVector(self.vertices)
         triangle_meshes.triangles = o3d.utility.Vector3iVector(self.triangles)
 
-        if mesh_uvs:
-            texture_filename = os.path.dirname(filename) + "/" + texture["image_uri"]
+        if "all_mesh_uvs" in locals():
+            if all_mesh_uvs:
+                pdb.set_trace()
 
-            img = cv2.imread(texture_filename[1:])
-            texture_filename = texture_filename[1:] + ".png"
-            cv2.imwrite(texture_filename, img)
+                texture_filename = os.path.dirname(filename) + "/" + image_uri
 
-            triangle_meshes.triangle_uvs = o3d.utility.Vector2dVector(
-                np.array(mesh_uvs)
-            )
-            triangle_meshes.triangle_material_ids = o3d.utility.IntVector(
-                [0] * len(self.triangles)
-            )
-            triangle_meshes.textures = [o3d.io.read_image(texture_filename)]
-        else:
-            triangle_meshes.triangle_uvs.extend(
-                [np.zeros((2)) for x in range(len(self.triangles) * 3)]
-            )
-            triangle_meshes.triangle_material_ids.extend([0] * len(self.triangles))
+                # pngでない場合は、pngに変換する
+                img = cv2.imread(texture_filename[1:])
+                texture_filename = texture_filename[1:] + ".png"
+                cv2.imwrite(texture_filename, img)
+                # todo: open3dのテクスチャの形式を調べる
+                # todo: テクスチャのUV座標を面ごとに入れる方法を調べる
+                triangle_meshes.triangle_uvs = o3d.utility.Vector2dVector(
+                    np.array(all_mesh_uvs)
+                )
+                triangle_meshes.triangle_material_ids = o3d.utility.IntVector(
+                    [0] * len(self.triangles)
+                )
+                triangle_meshes.textures = [o3d.io.read_image(texture_filename)]
+            else:
+                triangle_meshes.triangle_uvs.extend(
+                    [np.zeros((2)) for x in range(len(self.triangles) * 3)]
+                )
+                triangle_meshes.triangle_material_ids.extend([0] * len(self.triangles))
 
         # 法線の取得
         triangle_meshes.compute_vertex_normals()
