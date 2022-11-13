@@ -113,6 +113,61 @@ class CityGml:
                     vals_list.extend(vals)
 
             polygons = [str2floats(v).reshape((-1, 3)) for v in vals_list]
+
+            # テクスチャを取得
+            appearance_member = tree.xpath(
+                "/core:CityModel/app:appearanceMember/app:Appearance/app:surfaceDataMember/app:ParameterizedTexture",
+                namespaces=nsmap,
+            )
+            # 画像のURIを取得
+            textures = []
+            for appearance in appearance_member:
+                parameter = {
+                    "image_uri": None,
+                    "targets": {},
+                }
+
+                # 画像のURIを取得
+                for image_url in appearance.xpath("app:imageURI", namespaces=nsmap):
+                    parameter["image_uri"] = image_url.text
+
+                # テクスチャの情報を取得
+                # テクスチャ1枚に対して、複数の面がある
+                # targetは面のID
+                for target in appearance.xpath("app:target", namespaces=nsmap):
+                    uri = target.attrib["uri"]
+
+                    # テクスチャのUV座標を取得
+                    # 文字列になっているので、floatに変換
+                    texture_coordinates = [
+                        str2floats(coordinates).reshape((-1, 2))
+                        for coordinates in target.xpath(
+                            "app:TexCoordList/app:textureCoordinates",
+                            namespaces=nsmap,
+                        )
+                    ]
+                    # 要素数の最大値を取り出す
+                    maximum_of_elements = max(
+                        map(lambda x: x.shape[0], texture_coordinates)
+                    )
+
+                    # 要素の数が最大値よりも多い時？に要素を追加する
+                    for coordinate_index, coord in enumerate(texture_coordinates):
+                        last = coord[-1].reshape(-1, 2)
+                        num = maximum_of_elements - coord.shape[0]
+
+                        if num > 0:
+                            texture_coordinates[coordinate_index] = np.append(
+                                coord,
+                                np.tile(coord[-1].reshape(-1, 2), (num, 1)),
+                                axis=0,
+                            )
+
+                    # テクスチャの座標とURIのペアを格納
+                    parameter["targets"][uri] = np.array(texture_coordinates)
+
+                textures.append(parameter)
+
             obj_building.create_triangle_meshes(poly_ids, polygons)
             self.obj_buildings.append(obj_building)
 

@@ -50,10 +50,15 @@ class Building:
             vertices_earcut = earcut(np.array(poly_2d, dtype=np.int).flatten(), dim=2)
 
             if len(vertices_earcut) > 0:
-                vertices_length = len(self.vertices)
+                vertices_start_index = len(self.vertices)
+                # 三角化する前の面を追加
                 self.vertices.extend(transformed_polygon)
+
+                # 三角化した結果を(0, 3)の形に変換
+                # XYZの座標が3つ × 三角形数になるはず
                 triangles = np.array(vertices_earcut).reshape((-1, 3))
-                triangles_offset = triangles + vertices_length
+                # 三角化した後の面を追加
+                triangles_offset = triangles + vertices_start_index
                 self.triangles.extend(triangles_offset)
 
         # create triangle mesh by Open3D
