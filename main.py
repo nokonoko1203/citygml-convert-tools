@@ -44,7 +44,7 @@ if __name__ == "__main__":
             raise Exception(f"ERROR: lod number = {lod}")
 
         os.makedirs(output_path, exist_ok=True)
-        obj_city_gml.write_ply(output_path)
+        obj_city_gml.write_obj(output_path)
 
     except Exception as e:
         print(e)

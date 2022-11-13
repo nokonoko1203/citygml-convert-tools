@@ -2,7 +2,10 @@
 # coding: utf-8
 
 import math
+import os
+import pdb
 
+import cv2
 import numpy as np
 import open3d as o3d
 import pyproj
@@ -34,8 +37,11 @@ class Building:
         xx, yy, zz = self.transformer.transform(latitude, longitude, height)
         return np.array([xx, yy, zz])
 
-    def create_triangle_meshes(self, poly_ids, polygons, textures):
+    def create_triangle_meshes(self, poly_ids, polygons, textures, filename):
         for poly_id, poly in zip(poly_ids, polygons):
+            # polygonのidだけ、リンクではなくリンク元なので、#がついてないので、#をつける
+            poly_id = "#" + poly_id
+
             transformed_polygon = [self.transform_coordinate(*x) for x in poly]
             # CityGMLと法線計算時の頂点の取扱順序が異なるため、反転させる
             transformed_polygon = transformed_polygon[::-1]
@@ -61,18 +67,51 @@ class Building:
                 triangles_offset = triangles + vertices_start_index
                 self.triangles.extend(triangles_offset)
 
-                # テクスチャを追加
-                # 一次元に変換
-                t_array = triangles.reshape((-1))
+                # テクスチャを探す
+                # LOD2じゃない場合は無視される
+                # todo:要高速化
+                texture = None
+                for texture_coords in textures:
+                    # image_uri = texture_coords["image_uri"]
+                    targets = texture_coords["targets"]
 
-                import pdb
+                    uv_coords = targets.get(poly_id)
+                    if uv_coords is not None:
+                        texture = texture_coords
+                        break
 
-                pdb.set_trace()
+                mesh_uvs = []
+                if texture is not None:
+                    t = texture["targets"][poly_id]
+                    t_array = triangles.reshape((-1))
+                    for x in t_array:
+                        uv = t[0, x]
+                        mesh_uvs.append(uv)
 
         # create triangle mesh by Open3D
         triangle_meshes = o3d.geometry.TriangleMesh()
         triangle_meshes.vertices = o3d.utility.Vector3dVector(self.vertices)
         triangle_meshes.triangles = o3d.utility.Vector3iVector(self.triangles)
+
+        if mesh_uvs:
+            texture_filename = os.path.dirname(filename) + "/" + texture["image_uri"]
+
+            img = cv2.imread(texture_filename[1:])
+            texture_filename = texture_filename[1:] + ".png"
+            cv2.imwrite(texture_filename, img)
+
+            triangle_meshes.triangle_uvs = o3d.utility.Vector2dVector(
+                np.array(mesh_uvs)
+            )
+            triangle_meshes.triangle_material_ids = o3d.utility.IntVector(
+                [0] * len(self.triangles)
+            )
+            triangle_meshes.textures = [o3d.io.read_image(texture_filename)]
+        else:
+            triangle_meshes.triangle_uvs.extend(
+                [np.zeros((2)) for x in range(len(self.triangles) * 3)]
+            )
+            triangle_meshes.triangle_material_ids.extend([0] * len(self.triangles))
 
         # 法線の取得
         triangle_meshes.compute_vertex_normals()

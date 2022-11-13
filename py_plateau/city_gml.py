@@ -124,8 +124,7 @@ class CityGml:
             for appearance in appearance_member:
                 parameter = {
                     "image_uri": None,
-                    "poly_id": None,
-                    "uv_coord": None,
+                    "targets": {},
                 }
 
                 # 画像のURIを取得
@@ -136,7 +135,7 @@ class CityGml:
                 # テクスチャ1枚に対して、複数の面がある
                 # targetは面のID
                 for target in appearance.xpath("app:target", namespaces=nsmap):
-                    uri = target.attrib["uri"]
+                    poly_id = target.attrib["uri"]
 
                     # テクスチャのUV座標を取得
                     # 文字列になっているので、floatに変換
@@ -164,12 +163,13 @@ class CityGml:
                             )
 
                     # テクスチャの座標とURIのペアを格納
-                    parameter["poly_id"] = uri
-                    parameter["uv_coord"] = np.array(texture_coordinates)
+                    parameter["targets"][poly_id] = np.array(texture_coordinates)
 
-                    textures.append(parameter)
+                textures.append(parameter)
 
-            obj_building.create_triangle_meshes(poly_ids, polygons, textures)
+            obj_building.create_triangle_meshes(
+                poly_ids, polygons, textures, self.filename
+            )
             self.obj_buildings.append(obj_building)
 
     def write_ply(self, output_path):
@@ -181,3 +181,13 @@ class CityGml:
                 f"{self.mesh_code}_{self.object_name}_{self.to_srid}_{index:02}.ply",
             )
             o3d.io.write_triangle_mesh(pathname, triangle_mesh, write_ascii=True)
+
+    def write_obj(self, output_path):
+        os.makedirs(output_path, exist_ok=True)
+        for index, obj_building in enumerate(self.obj_buildings):
+            triangle_mesh = obj_building.get_triangle_mesh()
+            pathname = os.path.join(
+                output_path,
+                f"{self.mesh_code}_{self.object_name}_{self.to_srid}_{index:02}.obj",
+            )
+            o3d.io.write_triangle_mesh(pathname, triangle_mesh, write_triangle_uvs=True)

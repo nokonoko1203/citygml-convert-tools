@@ -1125,8 +1125,8 @@ python-versions = ">=3.8"
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
     {version = ">=1.20.3", markers = "python_version < \"3.10\""},
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
 ]
 python-dateutil = ">=2.8.1"
 pytz = ">=2020.1"
@@ -2478,14 +2478,23 @@ numpy = [
 ]
 open3d = [
     {file = "open3d-0.16.0-cp310-cp310-macosx_10_15_x86_64.whl", hash = "sha256:ee108b9f88d36bc35f6da298a51aea0287c31de027ff657e4fd5b51aa2b384e8"},
+    {file = "open3d-0.16.0-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:0a76da8eb507016f8d2aea0d493d23baa44828a6baad84a68c7de479ae56314f"},
+    {file = "open3d-0.16.0-cp310-cp310-manylinux2014_aarch64.whl", hash = "sha256:872631f1bd0a3e04aec5d20dbaaf9c9aaea20b200933094f51a81864b6e5ae29"},
     {file = "open3d-0.16.0-cp310-cp310-manylinux_2_27_x86_64.whl", hash = "sha256:fbe45e72c591bd88b2b5b202e1c5607fd17799b97cb3d4ccf5e27a666caa5761"},
     {file = "open3d-0.16.0-cp310-cp310-win_amd64.whl", hash = "sha256:9ea3b7b2efc902c0611e94073c013ad9850ed91e4de6bc0cce653a0b629760c2"},
     {file = "open3d-0.16.0-cp37-cp37m-macosx_10_15_x86_64.whl", hash = "sha256:7a24cf117349d9313db2f22c4de9cebf1f50ed7601af6f362fc246d323f04c63"},
+    {file = "open3d-0.16.0-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:edec04c2d2acbac198c80818fed4ccb8d4f16b1b9012a92ffccf29da029388ba"},
     {file = "open3d-0.16.0-cp37-cp37m-manylinux_2_27_x86_64.whl", hash = "sha256:ed00668bd6a976a5c2a4c84a610a3bd70ffe86f4c09a395249c29e26deadcaec"},
     {file = "open3d-0.16.0-cp37-cp37m-win_amd64.whl", hash = "sha256:23f4e71d8d5d717cc5c49b68538667b6c8cac40a180a45029d9833bb126242a5"},
     {file = "open3d-0.16.0-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:f10f9ae54427f6f1ee9f67dfec87b6108f94f29ceeb82ddaabf99efc7d1d9d66"},
+    {file = "open3d-0.16.0-cp38-cp38-macosx_12_0_arm64.whl", hash = "sha256:a7c79f07c1cb254ba7f0df111a1f66700a1a2b11f3a384d01cce5309286a14c5"},
+    {file = "open3d-0.16.0-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:ea463881576f6b32c491952cd26168b53d9e91b7f35ef5e6933d1eee16e44d0b"},
+    {file = "open3d-0.16.0-cp38-cp38-manylinux_2_27_x86_64.whl", hash = "sha256:ae94498e869a48a0798a7f47a5caf42409601dc9f18dc6569954961e1a2a86ad"},
     {file = "open3d-0.16.0-cp38-cp38-win_amd64.whl", hash = "sha256:a4d4385986bad86c1fd2b3b689626be645f1150895633d16906064e0e1c333c0"},
     {file = "open3d-0.16.0-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:d5d7d784f1678afff04fb7b78360e3e7e2bd04c3b2ae1e5a064651b76d0421b5"},
+    {file = "open3d-0.16.0-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:142afd19ba546e675cfe81f1647756a2502e93eb5315906a63fcf7ef4d552877"},
+    {file = "open3d-0.16.0-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:fe59a56433007ef9cab2548d9fe628d89c184b4b58ec60d794b11b068ba4d0bf"},
+    {file = "open3d-0.16.0-cp39-cp39-manylinux_2_27_x86_64.whl", hash = "sha256:291aea92f43311b0f4bc20080f6431f52d185d46eb3d2ae79b67400f70d81efb"},
     {file = "open3d-0.16.0-cp39-cp39-win_amd64.whl", hash = "sha256:10c1c25213da9ec5af789cd2a3aba854cbeb0438b64f6fde0e6e5beb86632f41"},
 ]
 opencv-contrib-python = [
@@ -2556,6 +2565,8 @@ pickleshare = [
     {file = "pickleshare-0.7.5.tar.gz", hash = "sha256:87683d47965c1da65cdacaf31c8441d12b8044cdec9aca500cd78fc2c683afca"},
 ]
 pillow = [
+    {file = "Pillow-9.3.0-1-cp37-cp37m-win32.whl", hash = "sha256:e6ea6b856a74d560d9326c0f5895ef8050126acfdc7ca08ad703eb0081e82b74"},
+    {file = "Pillow-9.3.0-1-cp37-cp37m-win_amd64.whl", hash = "sha256:32a44128c4bdca7f31de5be641187367fe2a450ad83b833ef78910397db491aa"},
     {file = "Pillow-9.3.0-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:0b7257127d646ff8676ec8a15520013a698d1fdc48bc2a79ba4e53df792526f2"},
     {file = "Pillow-9.3.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:b90f7616ea170e92820775ed47e136208e04c967271c9ef615b6fbd08d9af0e3"},
     {file = "Pillow-9.3.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:68943d632f1f9e3dce98908e873b3a090f6cba1cbb1b892a9e8d97c938871fbe"},
