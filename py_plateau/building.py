@@ -85,19 +85,35 @@ class Building:
                     # ポリゴンのidと一致するidを持つUV座標を取得する
                     uv_coords = t["targets"].get(poly_id)
                     # テクスチャがある場合は、UV座標を保持する
-                    # ただし、UV座標はは三角化される前の多角形の頂点に合っている
+                    # UV座標は三角化される前の多角形の頂点に合っているが、頂点の構成は変わっていないので問題ない？
+                    # 構築する面のインデックスが三角化されただけ
+                    # ただし、全ての面にテクスチャが貼っている訳ではないので、ズレてる
+                    # 元のコードではwallとかroofごとに三角形分割とテクスチャの取得を行っていた
                     if uv_coords is not None:
+                        # UV座標はUとVの配列で、複数格納されている
+                        # なんか同じ行列が複数入っていること3次元になってることがあるので除去
+                        uv_coords = np.unique(uv_coords, axis=0)
                         image_uri = t["image_uri"]
-
-                        t_array = triangles.reshape((-1))
+                        print(f"{image_uri=}")
+                        print(f"{uv_coords=}")
+                        triangle_1d_array = triangles.reshape((-1))
+                        print(f"{transformed_polygon=}")
+                        print(f"{triangles=}")
+                        print(f"{triangles_offset=}")
+                        print(f"{triangle_1d_array=}")
                         one_mesh_uvs = []
-                        for x in t_array:
-                            uv = uv_coords[0, x]
+                        for triangle_index in triangle_1d_array:
+                            print(f"{triangle_index=}")
+                            uv = uv_coords[0, triangle_index]
+                            print(f"{uv=}")
                             one_mesh_uvs.append(uv)
-                        all_mesh_uvs.append(one_mesh_uvs)
+                            print(f"{one_mesh_uvs=}")
+                        all_mesh_uvs.extend(one_mesh_uvs)
                         # IDはユニークのはずなので、見つけたら終了
                         break
-                # この段階で三角化されていない面、されている面、頂点、
+                # todo: 頂点の数・頂点の順番とuvが一致する必要があるはず。。。
+                print(f"{len(self.vertices)=}")
+                print(f"{len(all_mesh_uvs)=}")
 
         # create triangle mesh by Open3D
         triangle_meshes = o3d.geometry.TriangleMesh()
