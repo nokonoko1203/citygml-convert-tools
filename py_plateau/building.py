@@ -37,7 +37,7 @@ class Building:
         xx, yy, zz = self.transformer.transform(latitude, longitude, height)
         return np.array([xx, yy, zz])
 
-    def create_triangle_meshes(self, poly_ids, polygons, textures, filename):
+    def create_triangle_meshes(self, filename, poly_ids, polygons, textures=None):
         # 複数のポリゴン全てのポリゴンのUV座標を保持する
         all_mesh_uvs = []
 
