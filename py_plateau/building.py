@@ -52,22 +52,30 @@ class Building:
             transformed_polygon = np.array(transformed_polygon)
 
             normal = self.get_normal(transformed_polygon)[0]
+            # 三角形分割するために二次元に変換する
+            # 頂点のインデックスは変わらない
             poly_2d = np.zeros((transformed_polygon.shape[0], 2))
             for i, vertex in enumerate(transformed_polygon):
                 xy = self.to_2d(vertex, normal)
                 poly_2d[i] = xy
 
-            vertices_earcut = earcut(np.array(poly_2d, dtype=np.int).flatten(), dim=2)
+            # 入力のポリゴンに対する、三角化後のインデックスが返ってくる
+            # 1次元の配列で返ってくる
+            triangulated_vertices_indexes = earcut(
+                np.array(poly_2d, dtype=np.int).flatten(), dim=2
+            )
 
-            if len(vertices_earcut) > 0:
+            if len(triangulated_vertices_indexes) > 0:
+                # 現在の頂点数を取得
                 vertices_start_index = len(self.vertices)
-                # 三角化する前の面を追加
+                # 複数の面を1つの配列で構成するので、面の頂点をどんどん追加していく
                 self.vertices.extend(transformed_polygon)
 
-                # 三角化した結果を(0, 3)の形に変換
+                # 三角化した結果のインデックスは1次元なので(n, 3)の形に変換
                 # XYZの座標が3つ × 三角形数になるはず
-                triangles = np.array(vertices_earcut).reshape((-1, 3))
-                # 三角化した後の面を追加
+                triangles = np.array(triangulated_vertices_indexes).reshape((-1, 3))
+                # 面は、面ごとに先頭の頂点が0になっている
+                # が、全ての頂点1つの配列にextendしていくため、現在の頂点数を足して指定するインデックスを調整する
                 triangles_offset = triangles + vertices_start_index
                 self.triangles.extend(triangles_offset)
 
@@ -89,6 +97,7 @@ class Building:
                         all_mesh_uvs.append(one_mesh_uvs)
                         # IDはユニークのはずなので、見つけたら終了
                         break
+                # この段階で三角化されていない面、されている面、頂点、
 
         # create triangle mesh by Open3D
         triangle_meshes = o3d.geometry.TriangleMesh()
@@ -105,8 +114,12 @@ class Building:
                 img = cv2.imread(texture_filename[1:])
                 texture_filename = texture_filename[1:] + ".png"
                 cv2.imwrite(texture_filename, img)
-                # todo: open3dのテクスチャの形式を調べる
                 # todo: テクスチャのUV座標を面ごとに入れる方法を調べる
+                # 三角形なら3点のUV座標が必要なので、(頂点の数 * 面の数)行 × 2列が必要
+                # all_mesh_uvsは三角分割される前の面の頂点なので、3点以上ある
+                # これを三角分割された頂点に合わせる必要がある
+                # あと、順番も合ってないといけない
+                # テクスチャを持っていない面も存在するのでどうするか
                 triangle_meshes.triangle_uvs = o3d.utility.Vector2dVector(
                     np.array(all_mesh_uvs)
                 )

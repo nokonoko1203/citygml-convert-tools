@@ -80,6 +80,7 @@ class CityGml:
                 namespaces=nsmap,
             )
             polygons = [str2floats(face_str).reshape((-1, 3)) for face_str in faces]
+            # todo: lod2に最適化しすぎて、一旦LOD1では利用できなくなっている
             obj_building.create_triangle_meshes(polygons)
             self.obj_buildings.append(obj_building)
 
