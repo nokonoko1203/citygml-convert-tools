@@ -81,73 +81,58 @@ class Building:
 
                 # テクスチャを探す
                 # LOD2じゃない場合はテクスチャがないので無視される
-                for t in textures:
-                    # ポリゴンのidと一致するidを持つUV座標を取得する
-                    uv_coords = t["targets"].get(poly_id)
-                    # テクスチャがある場合は、UV座標を保持する
-                    # UV座標は三角化される前の多角形の頂点に合っているが、頂点の構成は変わっていないので問題ない？
-                    # 構築する面のインデックスが三角化されただけ
-                    # ただし、全ての面にテクスチャが貼っている訳ではないので、ズレてる
-                    # 元のコードではwallとかroofごとに三角形分割とテクスチャの取得を行っていた
-                    if uv_coords is not None:
-                        # UV座標はUとVの配列で、複数格納されている
-                        # なんか同じ行列が複数入っていること3次元になってることがあるので除去
-                        uv_coords = np.unique(uv_coords, axis=0)
-                        image_uri = t["image_uri"]
-                        print(f"{image_uri=}")
-                        print(f"{uv_coords=}")
-                        triangle_1d_array = triangles.reshape((-1))
-                        print(f"{transformed_polygon=}")
-                        print(f"{triangles=}")
-                        print(f"{triangles_offset=}")
-                        print(f"{triangle_1d_array=}")
-                        one_mesh_uvs = []
-                        for triangle_index in triangle_1d_array:
-                            print(f"{triangle_index=}")
-                            uv = uv_coords[0, triangle_index]
-                            print(f"{uv=}")
-                            one_mesh_uvs.append(uv)
-                            print(f"{one_mesh_uvs=}")
-                        all_mesh_uvs.extend(one_mesh_uvs)
-                        # IDはユニークのはずなので、見つけたら終了
-                        break
-                # todo: 頂点の数・頂点の順番とuvが一致する必要があるはず。。。
-                print(f"{len(self.vertices)=}")
-                print(f"{len(all_mesh_uvs)=}")
+                # ポリゴンのidと一致するidを持つUV座標を取得する
+                target = [t for t in textures if t["targets"].get(poly_id) is not None]
+
+                # テクスチャがある場合は、UV座標を保持する
+                # UV座標は三角化される前の多角形の頂点に合っているが、頂点の構成は変わっていないので問題ない？
+                # 構築する面のインデックスが三角化されただけ
+                # ただし、全ての面にテクスチャが貼っている訳ではないので、ズレてる
+                # 元のコードではwallとかroofごとに三角形分割とテクスチャの取得を行っていた
+                if target:
+                    target = target[0]
+
+                    uv_coords = target["targets"].get(poly_id)
+                    image_uri = target["image_uri"]
+
+                    # UV座標はUとVの配列で、複数格納されている
+                    # なんか同じ行列が複数入っていること3次元になってることがあるので除去
+                    uv_coords = np.unique(uv_coords, axis=0)[0]
+                    all_mesh_uvs.extend(uv_coords)
+                    # IDはユニークのはずなので、見つけたら終了
+                    continue
+                else:
+                    # テクスチャが存在しない場合は、ダミーでUV座標を割り当てる
+                    all_mesh_uvs.extend(
+                        [np.zeros((2)) for x in range(len(transformed_polygon))]
+                    )
+                    continue
 
         # create triangle mesh by Open3D
         triangle_meshes = o3d.geometry.TriangleMesh()
         triangle_meshes.vertices = o3d.utility.Vector3dVector(self.vertices)
         triangle_meshes.triangles = o3d.utility.Vector3iVector(self.triangles)
 
-        if "all_mesh_uvs" in locals():
-            if all_mesh_uvs:
-                pdb.set_trace()
+        texture_filename = os.path.dirname(filename) + "/" + image_uri
 
-                texture_filename = os.path.dirname(filename) + "/" + image_uri
+        # pngでない場合は、pngに変換する
+        img = cv2.imread(texture_filename[1:])
+        texture_filename = texture_filename[1:] + ".png"
+        cv2.imwrite(texture_filename, img)
 
-                # pngでない場合は、pngに変換する
-                img = cv2.imread(texture_filename[1:])
-                texture_filename = texture_filename[1:] + ".png"
-                cv2.imwrite(texture_filename, img)
-                # todo: テクスチャのUV座標を面ごとに入れる方法を調べる
-                # 三角形なら3点のUV座標が必要なので、(頂点の数 * 面の数)行 × 2列が必要
-                # all_mesh_uvsは三角分割される前の面の頂点なので、3点以上ある
-                # これを三角分割された頂点に合わせる必要がある
-                # あと、順番も合ってないといけない
-                # テクスチャを持っていない面も存在するのでどうするか
-                triangle_meshes.triangle_uvs = o3d.utility.Vector2dVector(
-                    np.array(all_mesh_uvs)
-                )
-                triangle_meshes.triangle_material_ids = o3d.utility.IntVector(
-                    [0] * len(self.triangles)
-                )
-                triangle_meshes.textures = [o3d.io.read_image(texture_filename)]
-            else:
-                triangle_meshes.triangle_uvs.extend(
-                    [np.zeros((2)) for x in range(len(self.triangles) * 3)]
-                )
-                triangle_meshes.triangle_material_ids.extend([0] * len(self.triangles))
+        # 三角形なら3点のUV座標が必要なので、(頂点の数 * 面の数)行 × 2列が必要
+        # all_mesh_uvsは三角分割される前の面の頂点なので、3点以上ある
+        # これを三角分割された頂点に合わせる必要がある
+        # あと、順番も合ってないといけない
+        # テクスチャを持っていない面も存在するのでどうするか
+        triangles = np.array(self.triangles).flatten()
+        uvs = [all_mesh_uvs[index] for index in triangles]
+
+        triangle_meshes.triangle_uvs = o3d.utility.Vector2dVector(np.array(uvs))
+        triangle_meshes.triangle_material_ids = o3d.utility.IntVector(
+            [0] * len(self.triangles)
+        )
+        triangle_meshes.textures = [o3d.io.read_image(texture_filename)]
 
         # 法線の取得
         triangle_meshes.compute_vertex_normals()
