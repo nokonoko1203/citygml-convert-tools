@@ -98,7 +98,8 @@ class Building:
                     # UV座標はUとVの配列で、複数格納されている
                     # なんか同じ行列が複数入っていること3次元になってることがあるので除去
                     uv_coords = np.unique(uv_coords, axis=0)[0]
-                    all_mesh_uvs.extend(uv_coords)
+                    # 法線計算時に頂点の座標を反転して格納しているので、合わせて反転
+                    all_mesh_uvs.extend(uv_coords[::-1])
                     # IDはユニークのはずなので、見つけたら終了
                     continue
                 else:
