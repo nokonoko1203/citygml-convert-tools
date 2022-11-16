@@ -37,6 +37,9 @@ class Building:
         xx, yy, zz = self.transformer.transform(latitude, longitude, height)
         return np.array([xx, yy, zz])
 
+    def replace_x_and_y(self, x, y, z):
+        return np.array([y, x, z])
+
     def create_triangle_meshes(self, filename, poly_ids, polygons, textures=None):
         # 複数のポリゴン全てのポリゴンのUV座標を保持する
         all_mesh_uvs = []
@@ -46,7 +49,12 @@ class Building:
             # polygonのidだけ、リンクではなくリンク元なので、#がついてないので、#をつける
             poly_id = "#" + poly_id
 
-            transformed_polygon = [self.transform_coordinate(*x) for x in poly]
+            transformed_polygon = [
+                self.transform_coordinate(*coords) for coords in poly
+            ]
+            transformed_polygon = [
+                self.replace_x_and_y(*coords) for coords in transformed_polygon
+            ]
             # CityGMLと法線計算時の頂点の取扱順序が異なるため、反転させる
             transformed_polygon = transformed_polygon[::-1]
             transformed_polygon = np.array(transformed_polygon)
