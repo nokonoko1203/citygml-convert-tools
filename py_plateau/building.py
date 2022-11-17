@@ -55,8 +55,6 @@ class Building:
             transformed_polygon = [
                 self.replace_x_and_y(*coords) for coords in transformed_polygon
             ]
-            # CityGMLと法線計算時の頂点の取扱順序が異なるため、反転させる
-            transformed_polygon = transformed_polygon[::-1]
             transformed_polygon = np.array(transformed_polygon)
 
             normal = self.get_normal(transformed_polygon)[0]
@@ -106,8 +104,7 @@ class Building:
                     # UV座標はUとVの配列で、複数格納されている
                     # なんか同じ行列が複数入っていること3次元になってることがあるので除去
                     uv_coords = np.unique(uv_coords, axis=0)[0]
-                    # 法線計算時に頂点の座標を反転して格納しているので、合わせて反転
-                    all_mesh_uvs.extend(uv_coords[::-1])
+                    all_mesh_uvs.extend(uv_coords)
                     # IDはユニークのはずなので、見つけたら終了
                     continue
                 else:
