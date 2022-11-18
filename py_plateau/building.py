@@ -40,7 +40,11 @@ class Building:
     def replace_x_and_y(self, x, y, z):
         return np.array([y, x, z])
 
+    def replace_u_and_v(self, u, v):
+        return np.array([v, u])
+
     def create_triangle_meshes(self, filename, poly_ids, polygons, textures=None):
+        print(f"=================={filename} processing==================")
         # 複数のポリゴン全てのポリゴンのUV座標を保持する
         all_mesh_uvs = []
 
@@ -49,9 +53,11 @@ class Building:
             # polygonのidだけ、リンクではなくリンク元なので、#がついてないので、#をつける
             poly_id = "#" + poly_id
 
+            # 投影変換
             transformed_polygon = [
                 self.transform_coordinate(*coords) for coords in poly
             ]
+            # 3d系のツールで取り扱う時は大抵は右手系なので、それに合わせてXとYを反転させる必要がある
             transformed_polygon = [
                 self.replace_x_and_y(*coords) for coords in transformed_polygon
             ]
@@ -71,6 +77,9 @@ class Building:
                 np.array(poly_2d, dtype=np.int).flatten(), dim=2
             )
 
+            # 三角分割できた場合
+            # たまに直線とか入ってるので、三角化できない場合がある
+            # 三角化できない面にもテクスチャが割当たっていたりもするが、どうしようもないので無視
             if len(triangulated_vertices_indexes) > 0:
                 # 現在の頂点数を取得
                 vertices_start_index = len(self.vertices)
@@ -88,31 +97,43 @@ class Building:
                 # テクスチャを探す
                 # LOD2じゃない場合はテクスチャがないので無視される
                 # ポリゴンのidと一致するidを持つUV座標を取得する
-                target = [t for t in textures if t["targets"].get(poly_id) is not None]
+                target = None
+                for t in textures:
+                    if t["targets"].get(poly_id) is not None:
+                        target = t
+                        break
 
                 # テクスチャがある場合は、UV座標を保持する
                 # UV座標は三角化される前の多角形の頂点に合っているが、頂点の構成は変わっていないので問題ない？
                 # 構築する面のインデックスが三角化されただけ
                 # ただし、全ての面にテクスチャが貼っている訳ではないので、ズレてる
                 # 元のコードではwallとかroofごとに三角形分割とテクスチャの取得を行っていた
-                if target:
-                    target = target[0]
-
-                    uv_coords = target["targets"].get(poly_id)
+                if target is not None:
                     image_uri = target["image_uri"]
 
                     # UV座標はUとVの配列で、複数格納されている
                     # なんか同じ行列が複数入っていること3次元になってることがあるので除去
+                    uv_coords = target["targets"].get(poly_id)
                     uv_coords = np.unique(uv_coords, axis=0)[0]
-                    all_mesh_uvs.extend(uv_coords)
+
+                    all_mesh_uvs.extend(uv_coords[::-1])
                     # IDはユニークのはずなので、見つけたら終了
+                    print(f"{len(transformed_polygon)=}")
+                    print(f"{len(uv_coords)=}")
                     continue
                 else:
                     # テクスチャが存在しない場合は、ダミーでUV座標を割り当てる
                     all_mesh_uvs.extend(
-                        [np.zeros((2)) for x in range(len(transformed_polygon))]
+                        [np.zeros((2)) for _ in range(len(transformed_polygon))]
+                    )
+                    print(f"{len(transformed_polygon)=}")
+                    print(
+                        f"{len([np.zeros((2)) for _ in range(len(transformed_polygon))])=}"
                     )
                     continue
+            else:
+                print(f"{len(transformed_polygon)=}")
+                print("↑三角分割できなかった")
 
         # create triangle mesh by Open3D
         triangle_meshes = o3d.geometry.TriangleMesh()
